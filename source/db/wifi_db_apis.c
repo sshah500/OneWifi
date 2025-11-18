@@ -81,13 +81,13 @@
 #define ONEWIFI_DB_VERSION_RSS_MEMORY_THRESHOLD_FLAG 100035
 #define ONEWIFI_DB_VERSION_MGT_FRAME_RATE_LIMIT 100036
 #define ONEWIFI_DB_VERSION_MANAGED_WIFI_FLAG 100038
-#define ONEWIFI_DB_VERSION_WPA3_T_DISABLE_FLAG 100039
 #define DEFAULT_MANAGED_WIFI_SPEED_TIER 2
 #define ONEWIFI_DB_VERSION_STATS_FLAG 100037
 #define ONEWIFI_DB_VERSION_MEMWRAPTOOL_FLAG 100040
 #define DEFAULT_WHIX_CHUTILITY_LOGINTERVAL 900
 #define DEFAULT_WHIX_LOGINTERVAL 3600
 #define ONEWIFI_DB_VERSION_UPDATE_MLD_FLAG 100042
+#define ONEWIFI_DB_VERSION_WPA3_T_DISABLE_FLAG 100043
 
 #ifdef CONFIG_NO_MLD_ONLY_PRIVATE
 #define MLD_UNIT_COUNT 8
@@ -4891,9 +4891,10 @@ static void wifidb_vap_config_upgrade(wifi_vap_info_map_t *config, rdk_wifi_vap_
 
             if (sec->wpa3_transition_disable != false) {
                 sec->wpa3_transition_disable = false;
-                wifi_util_dbg_print(WIFI_DB, "%s:%d force change wpa3 transition disable state to false\r\n", __func__, __LINE__);
-                wifidb_update_wifi_vap_info(config->vap_array[i].vap_name, &config->vap_array[i],
-                    &rdk_config[i]);
+                int ret = wifidb_update_wifi_security_config(config->vap_array[i].vap_name, sec);
+                wifi_util_info_print(WIFI_DB, "%s:%d force change wpa3 transition"
+                    " disable state to false for vap:%s ret:%d\r\n", __func__, __LINE__,
+                    config->vap_array[i].vap_name, ret);
             }
         }
         if (g_wifidb->db_version < ONEWIFI_DB_VERSION_UPDATE_MLD_FLAG) {
@@ -6841,6 +6842,11 @@ int wifidb_init_radio_config_default(int radio_index,wifi_radio_operationParam_t
 #if defined (NEWPLATFORM_PORT) || defined (_GREXT02ACTS_PRODUCT_REQ_)
             cfg.variant |= WIFI_80211_VARIANT_AX;
 #endif /* NEWPLATFORM_PORT */
+
+#if defined(CONFIG_IEEE80211BE) && (defined(_PLATFORM_BANANAPI_R4_) || defined(_GREXT02ACTS_PRODUCT_REQ_))
+            cfg.variant |= WIFI_80211_VARIANT_BE;
+#endif /* defined(CONFIG_IEEE80211BE) && defined(_PLATFORM_BANANAPI_R4_) */
+
 #if defined (_PP203X_PRODUCT_REQ_) || defined (_GREXT02ACTS_PRODUCT_REQ_)
             cfg.beaconInterval = 200;
 #endif
@@ -6859,6 +6865,9 @@ int wifidb_init_radio_config_default(int radio_index,wifi_radio_operationParam_t
 #if defined (_PP203X_PRODUCT_REQ_)
             cfg.variant = WIFI_80211_VARIANT_A | WIFI_80211_VARIANT_N | WIFI_80211_VARIANT_AC;
             cfg.DfsEnabled = true;
+#elif defined (_GREXT02ACTS_PRODUCT_REQ_)
+	    cfg.variant = WIFI_80211_VARIANT_A | WIFI_80211_VARIANT_N | WIFI_80211_VARIANT_AC | WIFI_80211_VARIANT_AX;
+	    cfg.DfsEnabled = true;
 #else
             cfg.variant = WIFI_80211_VARIANT_A | WIFI_80211_VARIANT_N | WIFI_80211_VARIANT_AC | WIFI_80211_VARIANT_AX;
 #endif
@@ -6883,14 +6892,21 @@ int wifidb_init_radio_config_default(int radio_index,wifi_radio_operationParam_t
 #endif /* CONFIG_IEEE80211BE */
             break;
         case WIFI_FREQUENCY_6_BAND:
-            cfg.operatingClass = 131;
+            cfg.operatingClass = 134;
+#ifndef _PLATFORM_BANANAPI_R4_
             cfg.channel = 5;
+#else
+            cfg.channel = 37;
+#endif /* _PLATFORM_BANANAPI_R4_ */
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_160MHZ;
             cfg.variant = WIFI_80211_VARIANT_AX;
 
 #ifdef CONFIG_IEEE80211BE
             cfg.variant |= WIFI_80211_VARIANT_BE;
+#ifndef _PLATFORM_BANANAPI_R4_
+            cfg.operatingClass = 137;
             cfg.channelWidth = WIFI_CHANNELBANDWIDTH_320MHZ;
+#endif /* _PLATFORM_BANANAPI_R4_ */
 #endif /* CONFIG_IEEE80211BE */
             break;
         default:
@@ -6925,6 +6941,12 @@ int wifidb_init_radio_config_default(int radio_index,wifi_radio_operationParam_t
             wifi_util_dbg_print(WIFI_DB,"%s:%d: unable to convert country string\n", __func__, __LINE__);
         }
     }
+
+    if (wifi_hal_get_RegDomain(radio_index, &cfg.regDomain) != RETURN_OK) {
+        wifi_util_error_print(WIFI_DB, "%s:%d: unable to get regulatory domain for radio%d\n",
+            __func__, __LINE__, radio_index);
+    }
+
     cfg.countryCode = country_code_val;
     cfg.operatingEnvironment = wifi_operating_env_indoor;
     cfg.dtimPeriod = 1;
@@ -7202,7 +7224,8 @@ int wifidb_init_vap_config_default(int vap_index, wifi_vap_info_t *config,
                 cfg.u.bss_info.security.u.key.type = wifi_security_key_type_sae;
             } else {
 #if defined(_XB8_PRODUCT_REQ_) || defined(_SR213_PRODUCT_REQ_) || defined(_XER5_PRODUCT_REQ_) || \
-    defined(_SCER11BEL_PRODUCT_REQ_) || defined(_SCXF11BFL_PRODUCT_REQ_)
+    defined(_SCER11BEL_PRODUCT_REQ_) || defined(_SCXF11BFL_PRODUCT_REQ_) ||                      \
+    defined(_PLATFORM_BANANAPI_R4_)
                 cfg.u.bss_info.security.mode = wifi_security_mode_wpa3_transition;
                 cfg.u.bss_info.security.wpa3_transition_disable = false;
                 cfg.u.bss_info.security.mfp = wifi_mfp_cfg_optional;
@@ -9179,7 +9202,7 @@ int get_all_param_from_psm_and_set_into_db(void)
         is_device_type_vbvxb10() == true || is_device_type_vbvxb9() == true || is_device_type_sercommxb10() == true ||
         is_device_type_scxer10() == true || is_device_type_sr213() == true ||
         is_device_type_cmxb7() == true || is_device_type_cbr2() == true ||
-        is_device_type_vbvxer5() == true || is_device_type_xle() == true) {
+        is_device_type_vbvxer5() == true || is_device_type_xle() == true || is_device_type_sr203() == true) {
         bool wifi_psm_db_enabled = false;
         char last_reboot_reason[32];
         raw_data_t data;
