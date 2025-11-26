@@ -289,6 +289,7 @@ int clone_wifi_event(wifi_event_t *event, wifi_event_t **clone)
 wifi_event_t *create_wifi_event(unsigned int msg_len, wifi_event_type_t type,
     wifi_event_subtype_t sub_type)
 {
+    wifi_util_info_print(WIFI_CTRL, "%s:%d IEEE1905: create_wifi_event\n", __FUNCTION__, __LINE__);
     wifi_event_t *event;
     if (type >= wifi_event_type_max) {
         wifi_util_error_print(WIFI_CTRL, "%s %d Invalid event type %d\n", __FUNCTION__, __LINE__,
@@ -302,7 +303,7 @@ wifi_event_t *create_wifi_event(unsigned int msg_len, wifi_event_type_t type,
             __LINE__, wifi_event_type_to_string(type), wifi_event_subtype_to_string(sub_type));
         return NULL;
     }
-
+    wifi_util_info_print(WIFI_CTRL, "%d %s:%d IEEE1905: checking type\n",type, __FUNCTION__, __LINE__);
     switch (type) {
     case wifi_event_type_exec:
     case wifi_event_type_webconfig:
@@ -759,6 +760,7 @@ int push_event_to_ctrl_queue(const void *msg, unsigned int len, wifi_event_type_
         return RETURN_ERR;
     }
 
+    wifi_util_info_print(WIFI_CTRL, "%s:%d IEEE1905: push_event_to_ctrl_que\n", __FUNCTION__, __LINE__);
     event = create_wifi_event(len, type, sub_type);
     if (event == NULL) {
         wifi_util_error_print(WIFI_CTRL,
