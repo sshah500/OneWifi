@@ -761,8 +761,7 @@ int push_event_to_ctrl_queue(const void *msg, unsigned int len, wifi_event_type_
     }
 
     wifi_util_info_print(WIFI_CTRL, "%s:%d IEEE1905: push_event_to_ctrl_que\n", __FUNCTION__, __LINE__);
-    event = create_wifi 
-    _event(len, type, sub_type);
+    event = create_wifi_event(len, type, sub_type);
     if (event == NULL) {
         wifi_util_error_print(WIFI_CTRL,
             "%s %d create wifi event allocation failed for type : %s subtype : %s\n", __FUNCTION__,
