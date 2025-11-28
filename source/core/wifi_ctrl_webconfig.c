@@ -3084,8 +3084,8 @@ static void create_station_with_private_credentials(webconfig_subdoc_data_t *dat
 }
 void start_station_vaps(bool is_private,bool rf_status)
 {
-    webconfig_subdoc_data_t data = NULL;
-    wifi_util_dbg_print(WIFI_CTRL,"IEEE1905:In start_station_vap func\n");
+    webconfig_subdoc_data_t *data = NULL;
+   
     int vap_index = 0, radio_index = 0, vap_array_index = 0, band = 0;
     char *str;
     unsigned int private_num_vaps = 0;
@@ -3093,15 +3093,13 @@ void start_station_vaps(bool is_private,bool rf_status)
     wifi_vap_name_t vap_names[MAX_NUM_RADIOS] = { 0 },private_vap_names[MAX_NUM_RADIOS] = {0};
     wifi_ctrl_t *ctrl;
     ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
-#if 0
     data = (webconfig_subdoc_data_t *)malloc(sizeof(webconfig_subdoc_data_t));
     if (data == NULL) {
         wifi_util_error_print(WIFI_CTRL,
             "%s: malloc failed to allocate webconfig_subdoc_data_t, size %d\n", __func__,
             sizeof(webconfig_subdoc_data_t));
-            return;
+        return;
     }
-#endif
 
     webconfig_init_subdoc_data(&data);
 
@@ -3109,7 +3107,7 @@ void start_station_vaps(bool is_private,bool rf_status)
         &vap_names[0]);
     if (rf_status && !is_private) {
         wifi_util_info_print(WIFI_CTRL,"%s:%d RF is down creating station with Hotspot credentials\n",__FUNCTION__,__LINE__);
-	    create_station_with_xfinity_credentials(&data,num_vaps,vap_names);
+	    create_station_with_xfinity_credentials(data,num_vaps,vap_names);
     }
     else if (rf_status) {
         wifi_util_info_print(WIFI_CTRL,"%s:%d creating station with private credentials\n",__FUNCTION__,__LINE__);
@@ -3184,3 +3182,4 @@ int register_with_webconfig_framework()
     wifi_util_info_print(WIFI_CTRL, "%s: Done Registering\n", __func__);
     return RETURN_OK;
 }
+
