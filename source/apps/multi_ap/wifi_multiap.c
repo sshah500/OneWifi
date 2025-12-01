@@ -505,26 +505,29 @@ int set_bp_filter(int sockfd,const char *iface_name)
     #define OP_JEQ (BPF_JMP | BPF_JEQ | BPF_K)
     #define OP_RET (BPF_RET | BPF_K)
     static struct sock_filter bpfcode[4] = {
-        { OP_LDH, 0, 0, 12          },  // ldh [12]
-        { OP_JEQ, 0, 1, ETH_P_1905  },  // jeq #0x893a, L2, L3
-        { OP_RET, 0, 0, 0xffffffff,         },  // ret #0xffffffff
-        { OP_RET, 0, 0, 0           },  // ret #0x0
+           { OP_LDH, 0, 0, 12          },  // ldh [12]
+           { OP_JEQ, 0, 1, ETH_P_1905  },  // jeq #0x893a, L2, L3
+           { OP_RET, 0, 0, 0xffffffff,         },  // ret #0xffffffff
+           { OP_RET, 0, 0, 0           },  // ret #0x0
     };
     struct sock_fprog bpf = { 4, bpfcode };
+    wifi_util_info_print(WIFI_CTRL,"%s:%d: IEEE1905: Inside set_bp_filter. \n", __func__, __LINE__);
     if (setsockopt(sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf))) {
-        wifi_util_info_print(WIFI_CTRL,"%s:%d: Error in attaching filter, err:%d\n", __func__, __LINE__, errno);
+        wifi_util_info_print(WIFI_CTRL,"%s:%d: IEEE1905: Error in attaching filter, err:%d\n", __func__, __LINE__, errno);
         close(sockfd);
         return -1;
     }
-
+ 
     memset(&mreq, 0, sizeof(mreq));
+    mreq.mr_type = PACKET_MR_PROMISC;
     mreq.mr_ifindex = (int)(if_nametoindex(iface_name));
+       
     if (setsockopt(sockfd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq))) {
-        wifi_util_info_print(WIFI_CTRL,"%s:%d: Error setting promisuous for interface:%s, err:%d\n", __func__, __LINE__,iface_name, errno);
+        wifi_util_info_print(WIFI_CTRL,"%s:%d: IEEE1905: Error setting promisuous for interface:%s, err:%d\n", __func__, __LINE__,iface_name, errno);
         close(sockfd);
         return -1;
     }
-
+ 
     return 0;
 }
 
