@@ -1771,7 +1771,7 @@ int validate_and_sync_private_vap_credentials()
 int start_wifi_ctrl(wifi_ctrl_t *ctrl)
 {
     int monitor_ret = 0;
-
+    wifi_util_info_print(WIFI_CTRL,"%s:%d IEEE1905: In start_wifi_ctrl\n",__func__,__LINE__);
     monitor_ret = init_wifi_monitor();
 
     start_wifi_services();
@@ -1802,6 +1802,10 @@ int start_wifi_ctrl(wifi_ctrl_t *ctrl)
 
 #ifdef ONEWIFI_CAC_APP_SUPPORT
     apps_mgr_cac_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_start, NULL, 0);
+#endif
+
+#ifdef ONEWIFI_MULTIAP_APP_SUPPORT
+(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_start, NULL, 0);
 #endif
 
     ctrl_queue_timeout_scheduler_tasks(ctrl);
