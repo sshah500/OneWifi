@@ -3046,12 +3046,12 @@ void create_station_with_xfinity_credentials(webconfig_subdoc_data_t *data ,int 
     }
 }
 
-static void create_station_with_private_credentials(webconfig_subdoc_data_t *data,int num_vaps,int private_num_vaps,wifi_vap_name_t *private_vap_names )
+static void create_station_with_private_credentials(webconfig_subdoc_data_t *data,int num_vaps,int private_num_vaps,wifi_vap_name_t *private_vap_names,wifi_vap_name_t *vap_names)
 {
     int private_vap_index = 0, radio_index = 0, vap_index = 0;
     int status = RETURN_OK;
     int vap_array_index = 0,private_vap_array_index = 0;
-    wifi_vap_name_t vap_names[MAX_NUM_RADIOS] = { 0 };
+    //wifi_vap_name_t vap_names[MAX_NUM_RADIOS] = { 0 };
     
     for (int i = 0; i < num_vaps || i < private_num_vaps; i++) {
         vap_index = convert_vap_name_to_index(&data->u.decoded.hal_cap.wifi_prop,vap_names[i]);
@@ -3074,7 +3074,7 @@ static void create_station_with_private_credentials(webconfig_subdoc_data_t *dat
         }
         else {
            
-            wifi_util_error_print(WIFI_CTRL, "%s:%d  pvt=%s passphrase = %s\n", __func__, __LINE__,data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.ssid,data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.security.u.key.key);
+            wifi_util_error_print(WIFI_CTRL, "%s:%d IEEE1905: pvt=%s passphrase = %s\n", __func__, __LINE__,data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.ssid,data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.security.u.key.key);
             snprintf(data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[vap_array_index].u.sta_info.ssid,sizeof(data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[vap_array_index].u.sta_info.ssid),data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.ssid);
             snprintf(data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[vap_array_index].u.sta_info.security.u.key.key,sizeof(data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[vap_array_index].u.sta_info.security.u.key.key),data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.security.u.key.key);
             
@@ -3110,9 +3110,9 @@ void start_station_vaps(bool is_private,bool rf_status)
 	    create_station_with_xfinity_credentials(data,num_vaps,vap_names);
     }
     else if (rf_status) {
-        wifi_util_info_print(WIFI_CTRL,"%s:%d creating station with private credentials\n",__func__, __LINE__);
+        wifi_util_info_print(WIFI_CTRL,"%s:%d IEEE1905 creating station with private credentials\n",__func__, __LINE__);
         private_num_vaps = get_list_of_private_ssid(&data->u.decoded.hal_cap.wifi_prop, MAX_NUM_RADIOS, &private_vap_names[0]);
-        create_station_with_private_credentials(data,num_vaps,private_num_vaps,private_vap_names);
+        create_station_with_private_credentials(data,num_vaps,private_num_vaps,private_vap_names,vap_names);
     }
     else {
         wifi_util_dbg_print(WIFI_CTRL,"station vaps going back to default case \n");
@@ -3157,7 +3157,7 @@ void start_station_vaps(bool is_private,bool rf_status)
     
     if (webconfig_encode(&ctrl->webconfig, data, webconfig_subdoc_type_mesh_sta) ==
         webconfig_error_none) {
-        wifi_util_info_print(WIFI_CTRL, "%s:%d webconfig_encode success\n", __FUNCTION__, __LINE__);
+        wifi_util_info_print(WIFI_CTRL, "%s:%d IEEE1905: webconfig_encode success\n", __FUNCTION__, __LINE__);
         str = data->u.encoded.raw;
         push_event_to_ctrl_queue(str, strlen(str), wifi_event_type_webconfig,
             wifi_event_webconfig_set_data_dml, NULL);
