@@ -1102,8 +1102,9 @@ bus_error_t get_assoc_clients_data(char *event_name, raw_data_t *p_data, bus_use
     }
     strncpy((char *)p_data->raw_data.bytes, data.u.encoded.raw, str_size);
     p_data->raw_data_len = str_size;
-
     webconfig_data_free(&data);
+    wifi_util_info_print(WIFI_CTRL, "%s:%d wifi_event_exec_start.\n", __func__, __LINE__);
+    apps_mgr_multiap_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_start, NULL, 0);
 
     return bus_error_success;
 }
@@ -1147,6 +1148,8 @@ bus_error_t get_null_subdoc_data(char *name, raw_data_t *p_data, bus_user_data_t
     p_data->raw_data_len = str_size;
 
     webconfig_data_free(&data);
+    wifi_util_info_print(WIFI_CTRL, "%s:%d wifi_event_exec_stop.\n", __func__, __LINE__);
+    apps_mgr_multiap_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_stop, NULL, 0);
 
     return bus_error_success;
 }
