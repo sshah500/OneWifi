@@ -2714,7 +2714,7 @@ void process_device_mode_command_event(int device_mode)
         update_wifi_vap_config(device_mode);
         if (device_mode == rdk_dev_mode_type_ext) {
             if (ctrl-> multiap_sta_enabled) {
-                wifi_util_info_print(WIFI_CTRL, "%s:%d: multi_ap_sta_enabled: %d\n", __func__, __LINE__,
+                wifi_util_info_print(WIFI_CTRL, "%s:%d: multiap_sta_enabled: %d\n", __func__, __LINE__,
                 ctrl-> multiap_sta_enabled);
                 ctrl-> multiap_sta_enabled = false;
                 // Stop the station when its in extender mode
