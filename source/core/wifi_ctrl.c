@@ -1809,8 +1809,10 @@ int start_wifi_ctrl(wifi_ctrl_t *ctrl)
 #ifdef ONEWIFI_CAC_APP_SUPPORT
     apps_mgr_cac_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_start, NULL, 0);
 #endif
+#if 0
 #ifdef ONEWIFI_MULTIAP_APP_SUPPORT
     //apps_mgr_multiap_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_start, NULL, 0);
+#endif
 #endif
 
     ctrl_queue_timeout_scheduler_tasks(ctrl);
