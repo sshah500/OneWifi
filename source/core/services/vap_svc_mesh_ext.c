@@ -843,27 +843,36 @@ void ext_try_connecting(vap_svc_t *svc)
         candidate = &ext->new_bss;
         candidate->conn_retry_attempt++;
         found_at_least_one_candidate = true;
+        wifi_util_dbg_print(WIFI_CTRL, " %s:%d: IEEE1905- conn_state : %s\n", __func__, __LINE__,
+            ext_conn_state_to_str(ext->conn_state));
     } else if (ext->conn_state == connection_state_connection_to_lcb_in_progress) {
         found_at_least_one_candidate = true;
         candidate = &ext->last_connected_bss;
         candidate->conn_retry_attempt++;
+        wifi_util_dbg_print(WIFI_CTRL, "%s:%d: IEEE1905:- conn_state : %s\n", __func__, __LINE__,
+            ext_conn_state_to_str(ext->conn_state));
     } else if (ext->conn_state == connection_state_connection_in_progress) {
         candidate = ext->candidates_list.scan_list;
+        wifi_util_dbg_print(WIFI_CTRL, "%s:%d: IEEE1905:- conn_state : %s\n", __func__, __LINE__,
+            ext_conn_state_to_str(ext->conn_state));
 
         for (i = 0; i < ext->candidates_list.scan_count; i++) {
             if (temp == NULL && (candidate->conn_attempt == connection_attempt_wait) &&
                 (candidate->conn_retry_attempt < STA_MAX_CONNECT_ATTEMPT)) {
                 temp = candidate;
+                wifi_util_info_print(WIFI_CTRL,"IEEE1905:connecting bss is tmp\n");
             }
             if (new_bss == NULL &&
                 !memcmp(candidate->external_ap.bssid, ext->new_bss.external_ap.bssid,
                     sizeof(candidate->external_ap.bssid))) {
                 new_bss = candidate;
+                 wifi_util_info_print(WIFI_CTRL,"IEEE1905:connecting bss is new \n");
                 break;
             } else if (last_connected_bss == NULL &&
                 !memcmp(candidate->external_ap.bssid, ext->last_connected_bss.external_ap.bssid,
                     sizeof(candidate->external_ap.bssid))) {
                 last_connected_bss = candidate;
+                 wifi_util_info_print(WIFI_CTRL,"IEEE1905:connecting bss is last\n");
             }
 
             candidate++;
@@ -901,7 +910,7 @@ void ext_try_connecting(vap_svc_t *svc)
         }
         vap_index = get_sta_vap_index_for_radio(svc->prop, radio_index);
 
-        wifi_util_info_print(WIFI_CTRL,"%s:%d connecting to ssid:%s bssid:%s rssi:%d frequency:%d on vap:%d radio:%d\n",
+        wifi_util_info_print(WIFI_CTRL,"%s:%d connecting to ssid:%s bssid:%s r:ssi:%d frequency:%d on vap:%d radio:%d\n",
                     __func__, __LINE__, candidate->external_ap.ssid,
                     to_mac_str(candidate->external_ap.bssid, bssid_str), candidate->external_ap.rssi,
                     candidate->external_ap.freq, vap_index, radio_index);
