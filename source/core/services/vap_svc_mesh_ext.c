@@ -823,7 +823,7 @@ static void reset_sta_state(vap_svc_t *svc, unsigned int vap_index)
         }
     }
 }
-
+/*
 void ext_try_connecting(vap_svc_t *svc)
 {
     vap_svc_ext_t   *ext;
@@ -942,7 +942,71 @@ void ext_try_connecting(vap_svc_t *svc)
         schedule_connect_sm(svc);
     }
 }
+*/
+void ext_try_connecting(vap_svc_t *svc)
+{
+    vap_svc_ext_t   *ext;
+    unsigned int i, vap_index=0, radio_index=0;
+    bss_candidate_t         *candidate=NULL;
+    mac_addr_str_t bssid_str;
+    wifi_ctrl_t *ctrl;
 
+    ctrl = svc->ctrl;
+    ext = &svc->u.ext;
+    ssid_t ssid; 
+    bss_candidate_t *scan = ext->candidates_list.scan_list;
+  
+	if (ctrl->multiap_sta_enabled == true) {
+        radio_index = 1;
+		get_sta_ssid_from_radio_config_by_radio_index(radio_index, ssid);
+        wifi_util_info_print(WIFI_CTRL,"IEEE1905:%s:%d Found target SSID: %s\n",__func__, __LINE__,ssid);
+    }
+	for (i = 0; i < ext->candidates_list.scan_count; i++) {
+        if (strncmp(scan[i].external_ap.ssid,
+                 ssid,
+                sizeof(scan[i].external_ap.ssid)) == 0) {
+            candidate = &scan[i];
+            wifi_util_info_print(WIFI_CTRL,"%s:%d Found target SSID: %s\n",__func__, __LINE__,candidate->external_ap.ssid);
+            break;
+        }
+    }
+    if (candidate == NULL) {
+        wifi_util_info_print(WIFI_CTRL,"%s:%d SSID:%s not found in scan list, skipping connect\n",
+        __func__, __LINE__, ssid);
+
+        ext_set_conn_state(ext,connection_state_disconnected_scan_list_none,__func__, __LINE__);
+        schedule_connect_sm(svc);
+        return;
+    }
+        wifi_util_info_print(WIFI_CTRL,"%s:%d connecting to ssid:%s bssid:%s r:ssi:%d frequency:%d on vap:%d radio:%d\n",
+                    __func__, __LINE__, candidate->external_ap.ssid,
+                    to_mac_str(candidate->external_ap.bssid, bssid_str), candidate->external_ap.rssi,
+                    candidate->external_ap.freq, vap_index, radio_index);
+        // wifi-telemetry print
+        wifi_util_info_print(WIFI_CTRL,"%s:%d connecting to rssi:%d\n",
+                    __func__, __LINE__, candidate->external_ap.rssi);
+        // Set to disabled in order to detect state change on connection retry
+        vap_index=15;
+        reset_sta_state(svc, vap_index);
+        ext->conn_retry++;
+        if (wifi_hal_connect(vap_index, &candidate->external_ap) == RETURN_ERR) {
+            wifi_util_error_print(WIFI_CTRL, "%s:%d sta connect failed for vap index: %d, "
+                "retry after timeout\n", __func__, __LINE__, vap_index);
+        }
+        if (ext->ext_conn_status_ind_timeout_handler_id != 0) {
+            wifi_util_dbg_print(WIFI_CTRL, "%s:%d connect status timer is in progress, cancel\n",
+                __func__, __LINE__);
+            scheduler_cancel_timer_task(ctrl->sched, ext->ext_conn_status_ind_timeout_handler_id);
+        }
+        if (!(ctrl->rf_status_down) && !(ctrl->multiap_sta_enabled)) {
+            scheduler_add_timer_task(ctrl->sched, FALSE, &ext->ext_conn_status_ind_timeout_handler_id,
+                process_ext_connect_event_timeout, svc, EXT_CONN_STATUS_IND_TIMEOUT, 1, FALSE);
+        } else {
+            scheduler_add_timer_task(ctrl->sched, FALSE, &ext->ext_conn_status_ind_timeout_handler_id,
+                process_ext_connect_event_timeout, svc, EXT_IGNITE_CONN_STATUS_IND_TIMEOUT, 1, FALSE);
+        }
+        apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_sta_connect_in_progress, candidate);
+    }
 int process_ext_connect_algorithm(vap_svc_t *svc)
 {
     vap_svc_ext_t   *ext;
