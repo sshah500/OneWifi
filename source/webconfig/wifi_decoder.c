@@ -2304,6 +2304,16 @@ webconfig_error_t decode_mesh_sta_object(const cJSON *vap, wifi_vap_info_t *vap_
         wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d: Security objects validation failed for %s\n",__FUNCTION__, __LINE__, vap_info->vap_name);
         return webconfig_error_decode;
     }
+		
+		// force_apply is not mandatory
+    object = cJSON_GetObjectItem(vap, "ForceApply");
+    if (object != NULL) {
+        decode_param_bool(vap, "ForceApply", param);
+        rdk_vap_info->force_apply = (param->type & cJSON_True) ? true : false;
+    } else {
+        // update the force_apply flag to false if force_apply not present
+        rdk_vap_info->force_apply = false;
+    }
 
     decode_param_object(vap, "ScanParameters", scan);
     if (decode_scan_params_object(scan, &vap_info->u.sta_info.scan_params) != webconfig_error_none) {

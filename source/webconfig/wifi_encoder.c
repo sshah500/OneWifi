@@ -1655,7 +1655,13 @@ webconfig_error_t encode_mesh_sta_object(const wifi_vap_info_t *vap_info,
         wifi_util_error_print(WIFI_WEBCONFIG, "%s:%d Security object encode failed for %s\n",__FUNCTION__, __LINE__, vap_info->vap_name);
         return webconfig_error_encode;
     }
-
+    
+    // ForceApply
+    if (rdk_vap_info->force_apply == true) {
+        //Add only if ForceApply is true
+        cJSON_AddBoolToObject(vap_obj, "ForceApply", rdk_vap_info->force_apply);
+    }
+    
     // Scan Parameters
     obj = cJSON_CreateObject();
     cJSON_AddItemToObject(vap_obj, "ScanParameters", obj);

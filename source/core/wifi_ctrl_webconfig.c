@@ -738,6 +738,7 @@ bool is_force_apply_true(rdk_wifi_vap_info_t *rdk_vap_info) {
         rdk_vap_info->force_apply = false;
         return true;
     }
+    
     return false;
 }
 
@@ -979,7 +980,7 @@ int webconfig_hal_vap_apply_by_name(wifi_ctrl_t *ctrl, webconfig_subdoc_decoded_
 
         wifi_util_dbg_print(WIFI_CTRL,"%s:%d: Comparing VAP [%s] with [%s]. \n",__func__, __LINE__,mgr_vap_info->vap_name,vap_info->vap_name);
         if (is_vap_param_config_changed(mgr_vap_info, vap_info, mgr_rdk_vap_info, rdk_vap_info,
-                isVapSTAMesh(tgt_vap_index)) || is_force_apply_true(rdk_vap_info)) {
+                isVapSTAMesh(tgt_vap_index)) || is_force_apply_true(rdk_vap_info) ) {
             // radio data changed apply
             wifi_util_info_print(WIFI_CTRL, "%s:%d: Change detected in received vap config, applying new configuration for vap: %s\n",
                                 __func__, __LINE__, vap_names[i]);
@@ -3080,7 +3081,8 @@ static void create_station_with_private_credentials(webconfig_subdoc_data_t *dat
             wifi_util_error_print(WIFI_CTRL, "%s:%d IEEE1905: pvt=%s passphrase = %s\n", __func__, __LINE__,data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.ssid,data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.security.u.key.key);
             snprintf(data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[vap_array_index].u.sta_info.ssid,sizeof(data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[vap_array_index].u.sta_info.ssid),data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.ssid);
             snprintf(data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[vap_array_index].u.sta_info.security.u.key.key,sizeof(data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[vap_array_index].u.sta_info.security.u.key.key),data->u.decoded.radios[radio_index].vaps.vap_map.vap_array[private_vap_array_index].u.bss_info.security.u.key.key);
-            
+            data->u.decoded.radios[radio_index].vaps.rdk_vap_array[vap_array_index].force_apply = true;
+
             convert_radio_index_to_freq_band(&data->u.decoded.hal_cap.wifi_prop, radio_index,&band);
             wifi_util_info_print(WIFI_CTRL, "%s:%d IEEE1905: radio index = %d & Band = %d\n",__func__, __LINE__,radio_index ,band);
 
