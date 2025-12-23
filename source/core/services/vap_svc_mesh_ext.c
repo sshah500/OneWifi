@@ -642,13 +642,18 @@ void ext_start_scan(vap_svc_t *svc)
 
         if (get_sta_ssid_from_radio_config_by_radio_index(radio_index, ssid)) {
             // Didn't find a STA for this radio index
+            wifi_util_info_print(WIFI_CTRL, "%s:%d vap not found for radio_index: %d\n",
+            __func__, __LINE__,radio_index);
             continue;
         }
         if (strlen(ssid) == 0) {
+            wifi_util_info_print(WIFI_CTRL, "%s:%d SSID not found for radio_index %d\n",
+                 __func__, __LINE__,radio_index);
             // SSID is wildcard SSID
             continue;
         }
-
+         wifi_util_info_print(WIFI_CTRL, "%s:%d found SSID: %s for radio_index: %d\n",
+           __func__, __LINE__,ssid,radio_index);
         wifi_util_dbg_print(WIFI_CTRL, "%s:%d start Scan on radio index %u\n", __func__, __LINE__,
             radio_index);
         wifi_hal_startScan(radio_index, mode, dwell_time, channels.num_channels,

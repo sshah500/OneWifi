@@ -2804,8 +2804,9 @@ int get_sta_ssid_from_radio_config_by_radio_index(unsigned int radio_index, ssid
     wifi_vap_info_map_t *map;
     bool found = false;
     unsigned int index, i;
-
+    
     index = get_sta_vap_index_for_radio(&((wifi_mgr_t *)get_wifimgr_obj())->hal_cap.wifi_prop, radio_index);
+    wifi_util_info_print(WIFI_CTRL,"%s:%d: vap index : %d for radio_index: %d\n",__func__, __LINE__, index,radio_index);
 
     radio = find_radio_config_by_index(radio_index);
     if (radio == NULL) {
@@ -2817,6 +2818,10 @@ int get_sta_ssid_from_radio_config_by_radio_index(unsigned int radio_index, ssid
         if (map->vap_array[i].vap_index == index) {
             found = true;
             strcpy(ssid, map->vap_array[i].u.sta_info.ssid);
+            wifi_util_info_print(WIFI_CTRL,"%s:%d: ======vap_index: %d Found =========\n",
+                __func__, __LINE__,map->vap_array[i].vap_index);
+            wifi_util_info_print(WIFI_CTRL,"%s:%d: SSID : %s\n",
+                __func__, __LINE__,map->vap_array[i].u.sta_info.ssid);
             break;
         }
     }
