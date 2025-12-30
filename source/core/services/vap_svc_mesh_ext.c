@@ -541,11 +541,11 @@ int process_udhcp_ip_check(vap_svc_t *svc)
         }
     }
 
-    if (ip_check_count >= EXT_UDHCP_IP_CHECK_NUM) {
+    if ((ip_check_count >= EXT_UDHCP_IP_CHECK_NUM) && !(ctrl->multiap_sta_enabled)){
         scheduler_cancel_timer_task(ctrl->sched, ext->ext_udhcp_ip_check_id);
         ext->ext_udhcp_ip_check_id = 0;
         ip_check_count = 0;
-        wifi_util_error_print(WIFI_CTRL, "%s:%d No IP on connected interface triggering a disconnect\n", __func__, __LINE__);
+        wifi_util_error_print(WIFI_CTRL, "IEEE1905:%s:%d No IP  on connected interface triggering a disconnect\n", __func__, __LINE__);
         apps_mgr_analytics_event(&ctrl->apps_mgr, wifi_event_type_command, wifi_event_type_udhcp_ip_fail, ext);
         ext->disconn_retry++;
         wifi_util_info_print(WIFI_CTRL, "%s:%d execute sta disconnect for vap index: %d\n",
