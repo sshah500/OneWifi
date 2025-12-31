@@ -3143,6 +3143,18 @@ void start_station_vaps(bool is_private,bool rf_status)
             sizeof(data->u.decoded.radios[radio_index]
             .vaps.vap_map.vap_array[vap_array_index]
             .u.sta_info.ssid),"we.connect.yellowstone");
+            
+        wifi_util_dbg_print(WIFI_CTRL,"IEEE1905: radio_index is: %d vap_array_index: %d SSID: %s\n",
+                     radio_index,vap_array_index,data->u.decoded.radios[radio_index]
+                    .vaps.vap_map.vap_array[vap_array_index].u.sta_info.ssid);
+    /*
+                    for (unsigned int i = 0; i < num_vaps; i++) {
+            vap_index = convert_vap_name_to_index(&data->u.decoded.hal_cap.wifi_prop,vap_names[i]);
+            wifi_util_dbg_print(WIFI_CTRL,"IEEE1905: default ssid is %s \n",data->u.decoded.radios[i]
+                .vaps.vap_map.vap_array[vap_index]
+                .u.sta_info.ssid);
+            }*/
+
         if (band == WIFI_FREQUENCY_6_BAND) {
             data->u.decoded.radios[radio_index]
             .vaps.vap_map.vap_array[vap_array_index]
