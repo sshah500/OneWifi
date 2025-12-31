@@ -3136,6 +3136,9 @@ void start_station_vaps(bool is_private,bool rf_status)
         create_station_with_private_credentials(data,num_vaps,private_num_vaps,private_vap_names,vap_names);
     }
     else {
+        
+        convert_radio_index_to_freq_band(&data->u.decoded.hal_cap.wifi_prop, radio_index,
+                &band);
         wifi_util_dbg_print(WIFI_CTRL,"station vaps going back to default case \n");
         snprintf(data->u.decoded.radios[radio_index]
             .vaps.vap_map.vap_array[vap_array_index]
