@@ -202,8 +202,8 @@ int multiap_event_exec_timeout(wifi_app_t *apps, void *arg)
         wifi_util_info_print(WIFI_CTRL, "%s:%d IEEE1905:calling send_multiap_broadcast_message() .\n",
             __func__, __LINE__);
     send_multiap_broadcast_message(interface_name);
-    return RETURN_OK;
     }
+    return RETURN_OK;
 }
 
 int handle_autoconf_search (unsigned char *data, unsigned int len)
