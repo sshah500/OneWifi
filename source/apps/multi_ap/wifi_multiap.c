@@ -187,11 +187,8 @@ int multiap_event_exec_stop(wifi_app_t *apps, void *arg)
     start_station_vaps(true,false);
     return RETURN_OK;
 }
-
 int multiap_event_exec_timeout(wifi_app_t *apps, void *arg)
 {
-    //wifi_util_info_print(WIFI_APPS, "%s:%d\n", __func__, __LINE__);
-    char* interface_name = (char*)arg;
     wifi_util_info_print(WIFI_CTRL, "%s:%d\n", __func__, __LINE__);
     //char* interface_name = (char*)arg;
     const char *interfaces[] = {"wl1","wl0","brlan0"};
@@ -200,11 +197,12 @@ int multiap_event_exec_timeout(wifi_app_t *apps, void *arg)
     // Send autoconfiguration search on each interface
     for (unsigned int i = 0; i < num_interfaces; i++) {
         wifi_util_info_print(WIFI_CTRL, "%s:%d IEEE1905:calling send_multiap_broadcast_message() .\n",
-            __func__, __LINE__);
-    send_multiap_broadcast_message(interface_name);
+             __func__, __LINE__);
+        send_multiap_broadcast_message((char *)interfaces[i]);
     }
     return RETURN_OK;
 }
+
 
 int handle_autoconf_search (unsigned char *data, unsigned int len)
 {
