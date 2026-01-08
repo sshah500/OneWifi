@@ -217,11 +217,13 @@ int handle_autoconf_search (unsigned char *data, unsigned int len)
     wifi_util_error_print(WIFI_CTRL,"device_supporting_service = %d: %s:%d\n",device_supporting_service,__func__,__LINE__);
     get_service_type_tlv(data,len, &supported_service); 
     wifi_util_error_print(WIFI_CTRL,"supported_service = %d: %s:%d\n",supported_service,__func__,__LINE__);
+/*
     if(device_supporting_service == multiap_service_type_extender || supported_service == multiap_service_type_extender)
     {
         wifi_util_error_print(WIFI_CTRL,"either supporting service or supported service is extender so not replying\n");
         return -1;
     }
+        */
     wifi_util_error_print(WIFI_CTRL,"split brain is detected in the network\n");
 	
     state =  multiap_state_completed;
@@ -506,8 +508,7 @@ int send_frame(unsigned char *buff, unsigned int len, bool multicast,  char *ifn
     // After sending for Autofconfig search for 50 times if no reply is seen then the other device is in extender mode
       apps_mgr_multiap_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_stop, NULL, 0);
 }
-
-int set_bp_filter(int sockfd,const char *iface_name)
+static int set_bp_filter(int sockfd, const char *iface_name)
 {
     struct packet_mreq mreq;
     #define OP_LDH (BPF_LD  | BPF_H   | BPF_ABS)
@@ -515,28 +516,30 @@ int set_bp_filter(int sockfd,const char *iface_name)
     #define OP_JEQ (BPF_JMP | BPF_JEQ | BPF_K)
     #define OP_RET (BPF_RET | BPF_K)
     static struct sock_filter bpfcode[4] = {
-        { OP_LDH, 0, 0, 12          },  // ldh [12]
-        { OP_JEQ, 0, 1, ETH_P_1905  },  // jeq #0x893a, L2, L3
-        { OP_RET, 0, 0, 0xffffffff,         },  // ret #0xffffffff
-        { OP_RET, 0, 0, 0           },  // ret #0x0
+           { OP_LDH, 0, 0, 12          },  // ldh [12]
+           { OP_JEQ, 0, 1, ETH_P_1905  },  // jeq #0x893a, L2, L3
+           { OP_RET, 0, 0, 0xffffffff,         },  // ret #0xffffffff
+           { OP_RET, 0, 0, 0           },  // ret #0x0
     };
     struct sock_fprog bpf = { 4, bpfcode };
+
     if (setsockopt(sockfd, SOL_SOCKET, SO_ATTACH_FILTER, &bpf, sizeof(bpf))) {
-        wifi_util_info_print(WIFI_CTRL,"%s:%d: Error in attaching filter, err:%d\n", __func__, __LINE__, errno);
+        wifi_util_info_print(WIFI_CTRL,"%s:%d: IEEE1905: Error in attaching filter, err:%d\n", __func__, __LINE__, errno);
         close(sockfd);
         return -1;
     }
-
     memset(&mreq, 0, sizeof(mreq));
+    mreq.mr_type = PACKET_MR_PROMISC;
     mreq.mr_ifindex = (int)(if_nametoindex(iface_name));
+
     if (setsockopt(sockfd, SOL_PACKET, PACKET_ADD_MEMBERSHIP, (char *)&mreq, sizeof(mreq))) {
-        wifi_util_info_print(WIFI_CTRL,"%s:%d: Error setting promisuous for interface:%s, err:%d\n", __func__, __LINE__,iface_name, errno);
+        wifi_util_info_print(WIFI_CTRL,"%s:%d: IEEE1905: Error setting promisuous for interface:%s, err:%d\n", __func__, __LINE__,iface_name, errno);
         close(sockfd);
         return -1;
     }
-
     return 0;
 }
+
 
 int create_raw_socket(const char *iface_name) {
     int sockfd;
@@ -721,7 +724,7 @@ void proto_process(unsigned char *data, unsigned int len)
     wifi_util_info_print(WIFI_CTRL, "%s:%d :Got a valid packet of type =%d\n", __func__,__LINE__,htons(cmdu->type));
     switch (htons(cmdu->type)) {
         case multiap_msg_type_autoconf_search:
-            if (state == multiap_state_none) {
+            //if (state == multiap_state_none) {
                 wifi_util_info_print(WIFI_CTRL, "%s:%d :Got a  packet of type =%d\n processing it", __func__,__LINE__,htons(cmdu->type));
                 ret = handle_autoconf_search(data,len);
                 if(ret == -1)
@@ -732,7 +735,7 @@ void proto_process(unsigned char *data, unsigned int len)
                     wifi_util_info_print(WIFI_CTRL, "autoconfig search response sent moving to extender mode\n");
                 }
 				
-            }
+           // }
         break;
         case multiap_msg_type_autoconf_resp:
             if (state == multiap_state_search_rsp_pending) {
