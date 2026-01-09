@@ -174,7 +174,7 @@ int multiap_event_exec_start(wifi_app_t *apps, void *arg)
     //start the station vaps only if none of the station is connected to vaps because in XLE when its in GW mode(with WAN failover) 
     // stations are connected to the GW then we should not start the station vaps
     wifi_util_info_print(WIFI_CTRL,"%s:%d IEEE1905: calling start_station_vaps().\n",__func__,__LINE__);
-    start_station_vaps(true,true);
+    //start_station_vaps(true,true);
     return RETURN_OK;
 }
 
@@ -217,13 +217,13 @@ int handle_autoconf_search (unsigned char *data, unsigned int len)
     wifi_util_error_print(WIFI_CTRL,"device_supporting_service = %d: %s:%d\n",device_supporting_service,__func__,__LINE__);
     get_service_type_tlv(data,len, &supported_service); 
     wifi_util_error_print(WIFI_CTRL,"supported_service = %d: %s:%d\n",supported_service,__func__,__LINE__);
-/*
+
     if(device_supporting_service == multiap_service_type_extender || supported_service == multiap_service_type_extender)
     {
         wifi_util_error_print(WIFI_CTRL,"either supporting service or supported service is extender so not replying\n");
         return -1;
     }
-        */
+    
     wifi_util_error_print(WIFI_CTRL,"split brain is detected in the network\n");
 	
     state =  multiap_state_completed;
@@ -503,7 +503,7 @@ int send_frame(unsigned char *buff, unsigned int len, bool multicast,  char *ifn
         wifi_util_info_print(WIFI_CTRL,"%s:%d: state in while loop = %d and iteration =%d\n",__func__, __LINE__,state,i);
         sleep(1);
     }
-    //state = multiap_state_none;
+    state = multiap_state_none;
     wifi_util_info_print(WIFI_CTRL,"autoconfig_search send successful and state =%d \n",state);
     // After sending for Autofconfig search for 50 times if no reply is seen then the other device is in extender mode
       apps_mgr_multiap_event(&ctrl->apps_mgr, wifi_event_type_exec, wifi_event_exec_stop, NULL, 0);
@@ -724,7 +724,7 @@ void proto_process(unsigned char *data, unsigned int len)
     wifi_util_info_print(WIFI_CTRL, "%s:%d :Got a valid packet of type =%d\n", __func__,__LINE__,htons(cmdu->type));
     switch (htons(cmdu->type)) {
         case multiap_msg_type_autoconf_search:
-            //if (state == multiap_state_none) {
+            if (state == multiap_state_none) {
                 wifi_util_info_print(WIFI_CTRL, "%s:%d :Got a  packet of type =%d\n processing it", __func__,__LINE__,htons(cmdu->type));
                 ret = handle_autoconf_search(data,len);
                 if(ret == -1)
@@ -735,7 +735,7 @@ void proto_process(unsigned char *data, unsigned int len)
                     wifi_util_info_print(WIFI_CTRL, "autoconfig search response sent moving to extender mode\n");
                 }
 				
-           // }
+            }
         break;
         case multiap_msg_type_autoconf_resp:
             if (state == multiap_state_search_rsp_pending) {
