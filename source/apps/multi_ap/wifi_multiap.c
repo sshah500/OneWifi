@@ -211,7 +211,7 @@ int handle_autoconf_search (unsigned char *data, unsigned int len)
     mac_address_t dst;
     wifi_ctrl_t *ctrl = NULL;
     char st[64];
-   	char *ifaces[MAX_IFACES] = { "brlan0" , "wl1" ,"wl0.1", "wl0", "wl0.7", "wl1.7","wl2.1","wl1.1"};
+   	char *ifaces[MAX_IFACES] = {"wl1.1" ,"wl0.1","brlan0"};
     int supported_service = -1;
     int device_supporting_service = get_service_type();
     wifi_util_error_print(WIFI_CTRL,"device_supporting_service = %d: %s:%d\n",device_supporting_service,__func__,__LINE__);
@@ -230,6 +230,7 @@ int handle_autoconf_search (unsigned char *data, unsigned int len)
     ctrl = (wifi_ctrl_t *)get_wifictrl_obj();
 
     get_al_mac_address(data,len, dst); 
+    wifi_util_info_print(WIFI_CTRL,"IEEE1905:dest mac_address =%s \n",dst);
     uint8_mac_to_string_mac(dst,st);
     wifi_util_error_print(WIFI_CTRL,"Enter %s:%d sender mac=%s len got =%ld\n",__func__,__LINE__,st,len);
     for (int i = 0; i < MAX_IFACES; ++i) {
@@ -593,6 +594,10 @@ int create_autoconfig_resp_msg(unsigned char *buff, unsigned char *dst, char *in
 
     uint8_mac_to_string_mac(dst,st);
     wifi_util_info_print(WIFI_CTRL,"string from mac_address_from_name of dest==%s \n",st);
+    if(memcmp(src_addr,dst,6)==0){
+        wifi_util_info_print(WIFI_CTRL,"drop pkts if source addr and dest addr matching \n");
+        return -1;
+    }
     memcpy(tmp, (unsigned char *)dst, sizeof(mac_address_t));
     tmp += sizeof(mac_address_t);
 
